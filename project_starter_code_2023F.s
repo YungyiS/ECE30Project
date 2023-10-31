@@ -109,8 +109,8 @@ Swap:
     // INSERT YOUR CODE HERE
     LDUR X9, [X0, #0]  //Load the first value into a temp register X9
     LDUR X10, [X1, #0] //Load the second value into temp register X10
-    STUR X10, [X0, #0] //Storing first value into second address
-    STUR X9, [X1, #0]  //Storing temp register X9 value to second address 
+    STUR X10, [X0, #0] //Storing second value into address of first value
+    STUR X9, [X1, #0]  //Storing first value into address of second value 
     br lr
 
 ////////////////////////
@@ -154,7 +154,7 @@ MergeSort:
     //     x1: The ending address of the array
 
     // INSERT YOUR CODE HERE
-
+    
     br lr
 
 ////////////////////////
