@@ -123,7 +123,14 @@ GetNextGap:
     //     x0: The previous value for gap
 
     // INSERT YOUR CODE HERE
-
+    SUBIS XZR, X0, #1   //Generating flags if gap is less than or equal to 1
+    B.GT GetNextGapELSE //Going to else if it's greater than
+    ADDI X0, XZR, #0    //Return value of gap = 0 if less than 1
+    br lr
+    GetNextGapELSE:    
+        ANDI X9, X0, #1 //Finding gap&1 and storing into temp register X9
+        LSR X10, X0, #1 //gap/2 and storing into temp register X10
+        ADD X0, X9, X10 //Setting gap value to gap/2 + gap&1 
     br lr
 
 
