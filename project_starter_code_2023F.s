@@ -107,11 +107,24 @@ Swap:
     //     x1: the address of the second value
 
     // INSERT YOUR CODE HERE
+    //Callee responsibility
+    SUBI SP, SP, #32	//subtract space for stack
+	STUR FP, [SP, #0]	//store frame pointer of caller
+	STUR LR, [SP, #8]	//store link register
+	ADDI FP, SP, #24	//move frame pointer up
+
+    //Loading data into register
     LDUR X9, [X0, #0]  //Load the first value into a temp register X9
     LDUR X10, [X1, #0] //Load the second value into temp register X10
+
+    //Storing valule in register and store in memory
     STUR X10, [X0, #0] //Storing second value into address of first value
     STUR X9, [X1, #0]  //Storing first value into address of second value
-    br lr
+
+    LDUR LR, [SP, #8]	//restore link register
+	LDUR FP, [SP, #0]	//restore caller’s frame pointer
+	ADDI SP, SP, #32	//restore stack pointer down
+    br lr  //Return to caller
 
 ////////////////////////
 //                    //
@@ -126,11 +139,12 @@ GetNextGap:
     SUBIS XZR, X0, #1   //Generating flags if gap is less than or equal to 1
     B.GT GetNextGapELSE //Going to else if it's greater than
     ADDI X0, XZR, #0    //Return value of gap = 0 if less than 1
-    br lr
+    B.endGetNextGap
     GetNextGapELSE:    
         ANDI X9, X0, #1 //Finding gap&1 and storing into temp register X9
         LSR X10, X0, #1 //gap/2 and storing into temp register X10
         ADD X0, X9, X10 //Setting gap value to gap/2 + gap&1 
+endGetNextGap:
     br lr
 
 
@@ -146,7 +160,38 @@ inPlaceMerge:
     //    x2: The gap used in comparisons for shell sorting
 
     // INSERT YOUR CODE HERE
+    SUBI SP, SP, #40   //Creating 5 double words for stack
+    STUR LR, [SP, #0]  //Storing the link register
+    STUR FP, [SP, #8]  //Storing frame pointer
+    STUR X0, [SP, #16] //Store address of starting element
+    SUBI FP, FP, #32   //Move frame pointer
 
+    SUBIS XZR, X2, 1  //Compare if gap is less than 1
+    B.LE end          //Branch to return if less than or equal to 1
+checkif:
+    LSL X9, X2, #3    //Create the gap to add to address
+    ADD X10, X0, X9   //Find right = left + gap index
+    SUBS XZR, X10, X1 //Check if calculate left + gap <= end 
+    B.LE loop
+    
+    BL.GetNextGap      //Find new gap
+    MOV X2, X0         //Copy new gap from GetNextGap (returned in X0) to X2
+    LDUR X0, [SP, #16] //Restore address for starting element
+    
+    BL.inPlaceMerge
+
+
+loop:
+    LDUR X11, [X0, #0]  //Load arry[left] into X11
+    LDUR X12, [X10, #0] //Load arry[right] into X12
+    SUBS XZR, X11, X12  
+    ADDI X0, X0, #8//Implement left++
+   
+
+end:
+    LDUR LR, [SP, #0]  //restore the link register
+    LDUR FP, [SP, #8]  //restore frame pointer
+    ADDI SP, SP, #40   //pop stack
     br lr
 
 
