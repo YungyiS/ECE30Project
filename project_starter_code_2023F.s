@@ -184,8 +184,8 @@ checkif:
 loop:
     LDUR X11, [X0, #0]  //Load arry[left] into X11
     LDUR X12, [X10, #0] //Load arry[right] into X12
-    SUBS XZR, X11, X12  
-    ADDI X0, X0, #8//Implement left++
+    SUBS XZR, X11, X12  //Checking if arry[left] > arry[right]
+    ADDI X0, X0, #8     //Implement left++
    
 
 end:
