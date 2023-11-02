@@ -5,7 +5,7 @@
 ////////////////////////
 
 // Partner1: YungYi Sun, A16310687
-// Partner2: (your name here), (Student ID here)
+// Partner2: Luke Wittemann, A17638123
 
 ////////////////////////
 //                    //
