@@ -140,10 +140,10 @@ GetNextGap:
     B.GT GetNextGapELSE //Going to else if it's greater than
     ADDI X0, XZR, #0    //Return value of gap = 0 if less than 1
     B.endGetNextGap
-    GetNextGapELSE:    
-        ANDI X9, X0, #1 //Finding gap&1 and storing into temp register X9
-        LSR X10, X0, #1 //gap/2 and storing into temp register X10
-        ADD X0, X9, X10 //Setting gap value to gap/2 + gap&1 
+GetNextGapELSE:    
+    ANDI X9, X0, #1 //Finding gap&1 and storing into temp register X9
+    LSR X10, X0, #1 //gap/2 and storing into temp register X10
+    ADD X0, X9, X10 //Setting gap value to gap/2 + gap&1 
 endGetNextGap:
     br lr
 
@@ -177,15 +177,18 @@ checkif:
     BL.GetNextGap      //Find new gap
     MOV X2, X0         //Copy new gap from GetNextGap (returned in X0) to X2
     LDUR X0, [SP, #16] //Restore address for starting element
-    
-    BL.inPlaceMerge
+    BL inPlaceMerge
 
 
 loop:
     LDUR X11, [X0, #0]  //Load arry[left] into X11
     LDUR X12, [X10, #0] //Load arry[right] into X12
     SUBS XZR, X11, X12  //Checking if arry[left] > arry[right]
+    B.LT leavecondition
+    BL Swap
+leavecondition:
     ADDI X0, X0, #8     //Implement left++
+    B checkif
    
 
 end:
