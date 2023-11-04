@@ -206,8 +206,18 @@ MergeSort:
     //     x1: The ending address of the array
 
     // INSERT YOUR CODE HERE
-    
-    br lr
+	
+	SUBS XZR, X0, X1   	//start/left - end/right
+	B.GE flee		//exit if left >= right
+	SUBI SP, SP, #someAmount		//allocate someAmount to stack with SP
+	STUR FP, [SP, #8]		//save FP to stack
+	STUR LR, [SP, #16]		//save SP to stack
+	ADDI FP, SP, #someAmount-8		//move FP to new stack base
+
+	LDUR FP, [SP, #8]		//load FP from stack
+	LDUR SP, [SP, #16]		//load SP from stack
+	ADDI SP, SP, #someAmount
+flee:  br lr
 
 ////////////////////////
 //                    //
