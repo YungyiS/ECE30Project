@@ -143,7 +143,7 @@ GetNextGap:
 GetNextGapELSE:    
     ANDI X9, X0, #1 //Finding gap&1 and storing into temp register X9
     LSR X10, X0, #1 //gap/2 and storing into temp register X10
-    ADD X0, X9, X10 //Setting gap value to gap/2 + gap&1 
+    ADD X0, X9, X10 //Setting gap value to gap/2 + gap&1 for ciel(gap/2)
 endGetNextGap:
     br lr
 
@@ -160,14 +160,16 @@ inPlaceMerge:
     //    x2: The gap used in comparisons for shell sorting
 
     // INSERT YOUR CODE HERE
-    SUBI SP, SP, #40   //Creating 5 double words for stack
+    SUBI SP, SP, #48   //Creating 5 double words for stack
     STUR LR, [SP, #0]  //Storing the link register
     STUR FP, [SP, #8]  //Storing frame pointer
     STUR X0, [SP, #16] //Store address of starting element
-    SUBI FP, FP, #32   //Move frame pointer
+    STUR X1, [SP, #24] //Store address of last element of 2nd array
+    STUR X2, [SP, #32] //Store value 
+    SUBI FP, FP, #40   //Move frame pointer
 
-    SUBIS XZR, X2, 1  //Compare if gap is less than 1
-    B.LE end          //Branch to return if less than or equal to 1
+    SUBIS XZR, X2, 0  //Compare if gap is less than 1
+    B.eq end          //Branch to "return" if gap = 0
 checkif:
     LSL X9, X2, #3    //Create the gap to add to address
     ADD X10, X0, X9   //Find right = left + gap index
@@ -176,7 +178,8 @@ checkif:
     
     BL.GetNextGap      //Find new gap
     MOV X2, X0         //Copy new gap from GetNextGap (returned in X0) to X2
-    LDUR X0, [SP, #16] //Restore address for starting element
+    LDUR X0, [SP, #16] //Restore address for starting element of first array
+    LDUR X1, [SP, #24] //REsotre address for last element of 2nd array
     BL inPlaceMerge
 
 
@@ -189,12 +192,10 @@ loop:
 leavecondition:
     ADDI X0, X0, #8     //Implement left++
     B checkif
-   
-
 end:
     LDUR LR, [SP, #0]  //restore the link register
     LDUR FP, [SP, #8]  //restore frame pointer
-    ADDI SP, SP, #40   //pop stack
+    ADDI SP, SP, #48   //pop stack
     br lr
 
 
