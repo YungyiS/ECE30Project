@@ -160,38 +160,42 @@ inPlaceMerge:
     //    x2: The gap used in comparisons for shell sorting
 
     // INSERT YOUR CODE HERE
+
     SUBI SP, SP, #48   //Creating 5 double words for stack
     STUR LR, [SP, #0]  //Storing the link register
     STUR FP, [SP, #8]  //Storing frame pointer
     STUR X0, [SP, #16] //Store address of starting element
     STUR X1, [SP, #24] //Store address of last element of 2nd array
-    STUR X2, [SP, #32] //Store value 
+    STUR X2, [SP, #32] //Store value of gap
     SUBI FP, FP, #40   //Move frame pointer
 
-    SUBIS XZR, X2, 0  //Compare if gap is less than 1
+    SUBIS XZR, X2, #0  //Compare if gap is less than 1
     B.eq end          //Branch to "return" if gap = 0
+
 checkif:
-    LSL X9, X2, #3    //Create the gap to add to address
+    LSL X9, X2, #3    //Convert the gap to value to added to address gap*8 bits
     ADD X10, X0, X9   //Find right = left + gap index
-    SUBS XZR, X10, X1 //Check if calculate left + gap <= end 
+    SUBS XZR, X10, X1 //Check if calculate right = left + gap <= end 
     B.LE loop
     
-    BL.GetNextGap      //Find new gap
+    MOV X0, X2         //Copy gap value into argument to find new gap address
+    BL GetNextGap      //Find new gap
     MOV X2, X0         //Copy new gap from GetNextGap (returned in X0) to X2
     LDUR X0, [SP, #16] //Restore address for starting element of first array
-    LDUR X1, [SP, #24] //REsotre address for last element of 2nd array
+    LDUR X1, [SP, #24] //Resotre address for last element of 2nd array
     BL inPlaceMerge
-
-
+    B end
 loop:
     LDUR X11, [X0, #0]  //Load arry[left] into X11
     LDUR X12, [X10, #0] //Load arry[right] into X12
     SUBS XZR, X11, X12  //Checking if arry[left] > arry[right]
-    B.LT leavecondition
-    BL Swap
-leavecondition:
+    B.LT skip
+    MOV X1, X10         //Copy right address to register X1 for 2nd value to swap in argument for swap function
+    BL Swap             //Swap the positions of arry[left] and arry[right]
+    LDUR X1, [SP, #24]  //Restore address of last element of 2nd array         
+skip:
     ADDI X0, X0, #8     //Implement left++
-    B checkif
+    B checkif           //Return to check if right is larger than the ending address 
 end:
     LDUR LR, [SP, #0]  //restore the link register
     LDUR FP, [SP, #8]  //restore frame pointer
