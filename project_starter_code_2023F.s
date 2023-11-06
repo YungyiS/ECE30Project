@@ -210,8 +210,50 @@ MergeSort:
     //     x1: The ending address of the array
 
     // INSERT YOUR CODE HERE
-    
-    br lr
+	
+	SUBS XZR, X0, X1   		//start/left - end/right
+	B.GE flee			//exit if left >= right
+
+	SUBI SP, SP, #64		//allocate 64 bytes to stack with SP (perhaps can be reduced one or two bytes)
+	STUR FP, [SP, #8]		//save FP to stack
+	STUR LR, [SP, #16]		//save LR to stack
+	ADDI FP, SP, #56		//move FP to new stack base
+
+	ADD X19, X0, X1			//use X19 as mid
+	ADDI X20, XZR, #2		//use X20 as temporary integer two
+	UDIV X19, X19, X20		//mid = (end + start) / 2
+
+	STUR X0, [SP #24]		//save start address to stack (might be redundant)
+	STUR X1 , [SP #32]		//save end address to stack
+	STUR X19, [SP #40]		//save mid address to stack
+	ADD X1, XZR, X19		//make second input register mid's address
+
+	BL MergeSort			//1st recursive call 
+
+	LDUR X1 , [SP #32]		//load end address from stack
+	LDUR X0, [SP #40]		//load mid address from stack to first input register
+	ADDI X0, X0, #8			//increment mid location by one 64 bit value
+
+	BL MergeSort			//2nd recursive call
+	
+	LDUR X0, [SP #24]		//load start address from stack into 1st input register
+	LDUR X1, [SP, #32]		//load end address from stack into 2nd input register
+	SUB X0, X1, X0   		//set 1st input register to end-start
+	ADDI X0, X0, #8			//increment 1st input register by one 64 bit value
+
+	BL GetNextGap			//call to find next gap
+
+	ADD X2, XZR, X0			//move ouput gap/X1 into 3rd input register X2
+	LDUR X0, [SP #24]		//load start address from stack into first input register
+	LDUR X1, [SP, #32]		//load end address from stack into 2nd input register
+
+	BL inPlaceMerge			//call to in place merge
+
+	LDUR FP, [SP, #8]		//load FP from stack
+	LDUR LR, [SP, #16]		//load LR from stack
+	ADDI SP, SP, #64		//release 64 bytes from stack
+
+flee:  	BR LR				//return to caller
 
 ////////////////////////
 //                    //
