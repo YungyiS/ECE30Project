@@ -214,16 +214,15 @@ MergeSort:
     //     x1: The ending address of the array
 
     // INSERT YOUR CODE HERE
-	
-	SUBS XZR, X0, X1   		//start/left - end/right
-	B.GE flee			//exit if left >= right
-
 	SUBI SP, SP, #64		//allocate 64 bytes to stack with SP (perhaps can be reduced one or two bytes)
 	STUR FP, [SP, #8]		//save FP to stack
 	STUR LR, [SP, #16]		//save LR to stack
 	ADDI FP, SP, #56		//move FP to new stack base
 
-	ADD X19, X0, X1			//use X19 as mid
+	SUBS XZR, X0, X1   		//start/left - end/right
+	B.GE flee			    //exit if left >= right
+
+	ADD X19, X0, X1			//use X19 as mid (finding left + right)
 	ADDI X20, XZR, #2		//use X20 as temporary integer two
 	UDIV X19, X19, X20		//mid = (end + start) / 2
 
