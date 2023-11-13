@@ -139,11 +139,13 @@ GetNextGap:
     SUBIS XZR, X0, #1   //Generating flags if gap is less than or equal to 1
     B.GT GetNextGapELSE //Going to else if it's greater than
     ADDI X0, XZR, #0    //Return value of gap = 0 if less than 1
-    B.endGetNextGap
+    B endGetNextGap
+
 GetNextGapELSE:    
-    ANDI X9, X0, #1 //Finding gap&1 and storing into temp register X9
-    LSR X10, X0, #1 //gap/2 and storing into temp register X10
-    ADD X0, X9, X10 //Setting gap value to gap/2 + gap&1 for ciel(gap/2)
+    ANDI X9, X0, #1     //Finding gap&1 and storing into temp register X9
+    LSR X10, X0, #1     //gap/2 and storing into temp register X10
+    ADD X0, X9, X10    //Setting gap value to gap/2 + gap&1 for ciel(gap/2)
+
 endGetNextGap:
     br lr
 
@@ -217,19 +219,24 @@ MergeSort:
 	SUBI SP, SP, #64		//allocate 64 bytes to stack with SP (perhaps can be reduced one or two bytes)
 	STUR FP, [SP, #8]		//save FP to stack
 	STUR LR, [SP, #16]		//save LR to stack
+    STUR X0, [SP #24]		//save start address to stack
+	STUR X1, [SP #32]		//save end address to stack
 	ADDI FP, SP, #56		//move FP to new stack base
 
 	SUBS XZR, X0, X1   		//start/left - end/right
-	B.GE flee			    //exit if left >= right
+	B.EQ flee			    //exit if left >= right
 
-	ADD X19, X0, X1			//use X19 as mid (finding left + right)
-	ADDI X20, XZR, #2		//use X20 as temporary integer two
-	UDIV X19, X19, X20		//mid = (end + start) / 2
+	ADD X9, X0, X1			//use X9 as mid (finding left + right)
+    LSR X9, X9, #4          //Dividing by 16 for division by 2 in index
+    SUBIS XZR, X9, #1       
+    B.EQ bypassOne          //If index is equal to 1, then skip checking if it's odd
+    ANDI X10, X9, #1        //Finding (start + end)&1 and storing into temp register X10
+    ADD X9, X9, X10         //Setting mid index to (start + end)/2 + (start + end)&1 for ciel((start + end)/2) in case of odd
+    bypassOne:
+    LSL X9, X9, #3          //Multiply by 8 to return address value
 
-	STUR X0, [SP #24]		//save start address to stack (might be redundant)
-	STUR X1 , [SP #32]		//save end address to stack
-	STUR X19, [SP #40]		//save mid address to stack
-	ADD X1, XZR, X19		//make second input register mid's address
+	STUR X9, [SP #40]		//save mid address to stack
+	MOV X1, X9		        //make second input register mid's address
 
 	BL MergeSort			//1st recursive call 
 
@@ -256,7 +263,11 @@ MergeSort:
 	LDUR LR, [SP, #16]		//load LR from stack
 	ADDI SP, SP, #64		//release 64 bytes from stack
 
-flee:  	BR LR				//return to caller
+flee:
+    LDUR FP, [SP, #8]		//load FP from stack
+	LDUR LR, [SP, #16]		//load LR from stack
+	ADDI SP, SP, #64		//release 64 bytes from stack  	
+    BR LR				    //return to caller
 
 ////////////////////////
 //                    //
