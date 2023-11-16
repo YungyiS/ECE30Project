@@ -136,6 +136,11 @@ GetNextGap:
     //     x0: The previous value for gap
 
     // INSERT YOUR CODE HERE
+    SUBI SP, SP, #32	//subtract space for stack
+	STUR FP, [SP, #0]	//store frame pointer of caller
+	STUR LR, [SP, #8]	//store link register
+	ADDI FP, SP, #24	//move frame pointer up
+
     SUBIS XZR, X0, #1   //Generating flags if gap is less than or equal to 1
     B.GT GetNextGapELSE //Going to else if it's greater than
     ADDI X0, XZR, #0    //Return value of gap = 0 if less than 1
@@ -147,6 +152,9 @@ GetNextGapELSE:
     ADD X0, X9, X10    //Setting gap value to gap/2 + gap&1 for ciel(gap/2)
 
 endGetNextGap:
+    LDUR LR, [SP, #8]	//restore link register
+	LDUR FP, [SP, #0]	//restore caller’s frame pointer
+	ADDI SP, SP, #32	//restore stack pointer down
     br lr
 
 
@@ -194,10 +202,12 @@ loop:
     B.LT skip
     MOV X1, X10         //Copy right address to register X1 for 2nd value to swap in argument for swap function
     BL Swap             //Swap the positions of arry[left] and arry[right]
-    LDUR X1, [SP, #24]  //Restore address of last element of 2nd array         
+    LDUR X1, [SP, #24]  //Restore address of last element of 2nd array
+
 skip:
     ADDI X0, X0, #8     //Implement left++
     B checkif           //Return to check if right is larger than the ending address 
+
 end:
     LDUR LR, [SP, #0]  //restore the link register
     LDUR FP, [SP, #8]  //restore frame pointer
@@ -219,22 +229,30 @@ MergeSort:
 	SUBI SP, SP, #64		//allocate 64 bytes to stack with SP (perhaps can be reduced one or two bytes)
 	STUR FP, [SP, #8]		//save FP to stack
 	STUR LR, [SP, #16]		//save LR to stack
-    STUR X0, [SP #24]		//save start address to stack
-	STUR X1, [SP #32]		//save end address to stack
 	ADDI FP, SP, #56		//move FP to new stack base
-
+                            //If condition
 	SUBS XZR, X0, X1   		//start/left - end/right
 	B.EQ flee			    //exit if left >= right
 
-	ADD X9, X0, X1			//use X9 as mid (finding left + right)
-    LSR X9, X9, #4          //Dividing by 16 for division by 2 in index
-    SUBIS XZR, X9, #1       
-    B.EQ bypassOne          //If index is equal to 1, then skip checking if it's odd
-    ANDI X10, X9, #1        //Finding (start + end)&1 and storing into temp register X10
-    ADD X9, X9, X10         //Setting mid index to (start + end)/2 + (start + end)&1 for ciel((start + end)/2) in case of odd
-    bypassOne:
-    LSL X9, X9, #3          //Multiply by 8 to return address value
+    STUR X0, [SP #24]		//save start address to stack
+	STUR X1, [SP #32]		//save end address to stack
 
+	LSR X11, X0, #3         //Finding index of X0 by dividing by 8
+    LSR X12, X1, #3         //Finding index of X1 by dividing by 8
+    ADD X9,  X11, X12       //Adding the indexes together
+
+    SUB X13, X12, X11       //Subtracting to temp register X13 of the index for X0 and X1
+    SUBIS XZR, X13, #1      //Seeing if X0 and X1 are 1 index apart from each other
+    B.GT bypass             //Jump to bypass if condition not met (X13 > 1)         
+    MOV X9, X11             //else case: Copy starting index to mid address
+    B store
+
+bypass:                     //Checking if the sum of indexes are odd
+    ANDI X10, X9, #1        //Finding (start + end)&1 and storing into temp register X10
+    ADD X9, X9, X10         //Setting mid index to implement ciel(start + end) = (start + end) + (start + end)&1 ciel(start + end)
+    LSR X9, X9, #1          //Divide the sum of indexes by 2
+store:
+    LSL X9, X9, #3          //Multiply by 8 to return index to address
 	STUR X9, [SP #40]		//save mid address to stack
 	MOV X1, X9		        //make second input register mid's address
 
@@ -258,10 +276,6 @@ MergeSort:
 	LDUR X1, [SP, #32]		//load end address from stack into 2nd input register
 
 	BL inPlaceMerge			//call to in place merge
-
-	LDUR FP, [SP, #8]		//load FP from stack
-	LDUR LR, [SP, #16]		//load LR from stack
-	ADDI SP, SP, #64		//release 64 bytes from stack
 
 flee:
     LDUR FP, [SP, #8]		//load FP from stack
